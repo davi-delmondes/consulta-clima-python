@@ -1,126 +1,140 @@
-# Consulta de Clima com WeatherAPI
+# Consulta de Clima — Python + WeatherAPI
 
-Aplicação de terminal desenvolvida em Python para consultar o clima atual de uma cidade usando a WeatherAPI.
+Aplicação de consulta de clima em terminal, desenvolvida em Python com integração à WeatherAPI.  
+O programa permite consultar o clima atual de uma cidade e exibir informações como temperatura, sensação térmica, umidade, vento, pressão atmosférica, índice UV, visibilidade e última atualização dos dados.
 
-## Sobre o projeto
+![Interface do sistema](./assets/terminal.png)
 
-Este projeto permite que o usuário digite o nome de uma cidade e receba informações climáticas em tempo real, como temperatura, sensação térmica, umidade, vento, pressão atmosférica, visibilidade e horário da última atualização.
+## Visão geral
 
-O objetivo do projeto foi praticar consumo de API, organização de código, tratamento de erros e uso de variáveis de ambiente com arquivo `.env`.
+O projeto foi construído como uma aplicação de terminal organizada, leve e funcional.  
+A consulta é feita por meio de uma API externa, e a chave de acesso é carregada com segurança a partir de um arquivo `.env`.
+
+A interface foi pensada para ser direta e fácil de usar, com menu numerado, mensagens padronizadas e validações para evitar consultas inválidas ou falhas inesperadas durante o uso.
 
 ## Funcionalidades
 
-* Consulta do clima atual de uma cidade
-* Exibição de dados de localização
-* Exibição de temperatura e sensação térmica
-* Exibição de informações sobre vento e ambiente
-* Tratamento de erros da WeatherAPI
-* Validação para cidade vazia
-* Configuração segura da API Key usando `.env`
-* Menu interativo no terminal
+- Consultar o clima atual de uma cidade
+- Exibir dados de localização
+- Exibir condição climática atual
+- Exibir temperatura e sensação térmica
+- Exibir umidade, vento, pressão atmosférica, índice UV e visibilidade
+- Exibir a data e hora da última atualização
+- Validar entrada vazia do usuário
+- Validar se os dados retornados pela API estão completos
+- Tratar erro de conexão com a API
+- Tratar respostas inválidas da API
+- Tratar erros retornados pela WeatherAPI
+- Usar arquivo `.env` para proteger a chave da API
+
+## Menu principal
+
+    [1] Consultar clima
+    [0] Sair
 
 ## Tecnologias utilizadas
 
-* Python
-* Requests
-* Python-dotenv
-* WeatherAPI
+- Python 3
+- requests
+- python-dotenv
+- WeatherAPI
+- Terminal / linha de comando
 
-## Estrutura do projeto
+## Bibliotecas e módulos utilizados
 
-```
-consulta-clima-python/
-├── consultar_clima.py
-├── .env.example
-├── .gitignore
-├── requirements.txt
-└── README.md
-```
+O projeto utiliza os seguintes módulos e bibliotecas:
 
-## Como usar
+- `os`
+- `requests`
+- `python-dotenv`
 
-### 1. Clone o repositório
+## Como executar
 
-```
-git clone https://github.com/davi-delmondes/consulta-clima-python.git
-```
+1. Tenha o Python 3 instalado na máquina.
 
-### 2. Acesse a pasta do projeto
+2. Clone este repositório ou baixe os arquivos do projeto.
 
-```
-cd consulta-clima-python
-```
+3. Acesse a pasta do projeto pelo terminal.
 
-### 3. Instale as dependências
+4. Instale as dependências:
 
-```
-pip install -r requirements.txt
-```
+        pip install -r requirements.txt
 
-### 4. Crie uma conta na WeatherAPI
+5. Crie uma conta na WeatherAPI e gere uma chave de API.
 
-Acesse o site da WeatherAPI, crie uma conta e gere sua própria API Key.
+6. Crie um arquivo chamado `.env` na pasta principal do projeto.
 
-### 5. Crie o arquivo `.env`
+7. Dentro do arquivo `.env`, adicione sua chave da API:
 
-Na pasta principal do projeto, crie um arquivo chamado `.env`.
+        API_KEY=sua_chave_aqui
 
-Dentro dele, adicione sua chave da API:
+8. Execute o arquivo principal:
 
-```
-API_KEY=sua_chave_aqui
-```
+        python consultar_clima.py
 
-Exemplo:
+## Configuração da API
 
-```
-API_KEY=123456789abcdef
-```
+O projeto usa a WeatherAPI para buscar os dados climáticos.
 
-### 6. Execute o programa
+A chave da API deve ser armazenada no arquivo `.env`, seguindo o modelo abaixo:
 
-```
-python consultar_clima.py
-```
+    API_KEY=sua_chave_aqui
+
+O repositório possui um arquivo `.env.example` apenas como exemplo de configuração.
 
 ## Exemplo de uso
 
-Ao executar o programa, será exibido um menu no terminal:
+Ao iniciar o programa, o menu principal é exibido no terminal:
 
-```
-╔════════════════════════════════════════════╗
-║             CONSULTA DE CLIMA              ║
-║    WeatherAPI - Dados em tempo real        ║
-╠════════════════════════════════════════════╣
-║ [1] Consultar clima                        ║
-║ [0] Sair                                   ║
-╚════════════════════════════════════════════╝
-```
+    [1] Consultar clima
+    [0] Sair
 
-Depois, basta escolher a opção de consulta e digitar o nome de uma cidade para visualizar os dados climáticos atuais.
+Ao escolher a opção de consulta, o usuário informa o nome de uma cidade.  
+Se a cidade for encontrada, o sistema exibe as informações climáticas atuais separadas por seções:
+
+- Localização
+- Clima atual
+- Vento e ambiente
+- Dados atualizados
+
+## Tratamento de erros
+
+O sistema possui validações para lidar com diferentes situações durante a execução:
+
+| Situação | Tratamento |
+| --- | --- |
+| Cidade vazia | Exibe mensagem solicitando uma cidade válida |
+| Falha de conexão | Exibe erro informando que não foi possível conectar à API |
+| Resposta inválida | Exibe erro quando a resposta da API não está no formato esperado |
+| Cidade não encontrada | Exibe mensagem traduzida para o usuário |
+| API Key ausente | Exibe erro de configuração antes de iniciar o programa |
+| API Key inválida | Exibe mensagem de erro retornada pela WeatherAPI |
+| Dados incompletos | Impede a exibição e informa que os dados retornados estão incompletos |
 
 ## Segurança
 
 O arquivo `.env` não deve ser enviado para o GitHub, pois contém a chave privada da API.
 
-Por isso, este projeto possui um arquivo `.env.example`, que serve apenas como modelo para outros usuários configurarem suas próprias chaves.
+Por isso, o projeto utiliza:
 
-Cada pessoa que baixar este projeto deve usar sua própria API Key da WeatherAPI.
+| Arquivo | Função |
+| --- | --- |
+| `.env` | Armazena a chave real da API localmente |
+| `.env.example` | Mostra o modelo de configuração sem expor dados sensíveis |
+| `.gitignore` | Impede que o `.env` seja enviado ao repositório |
 
-## Aprendizados
+## Destaques do projeto
 
-Durante o desenvolvimento deste projeto, foram praticados:
-
-* Consumo de API com Python
-* Uso da biblioteca `requests`
-* Uso da biblioteca `python-dotenv`
-* Uso de variáveis de ambiente
-* Organização de código em funções
-* Tratamento de erros
-* Validação de entrada do usuário
-* Criação de menu no terminal
-* Boas práticas para publicar projetos no GitHub
+- Interface em terminal com layout organizado
+- Consumo de API externa com Python
+- Uso de variáveis de ambiente para proteger a API Key
+- Separação do código em funções
+- Uso de type hints
+- Validação de dados recebidos da API
+- Tratamento de erros de conexão e resposta inválida
+- Mensagens traduzidas para erros comuns da WeatherAPI
+- Organização adequada para publicação no GitHub
 
 ## Autor
 
-Desenvolvido por Davi de Carvalho Delmondes.
+Desenvolvido por **Davi Delmondes**.
