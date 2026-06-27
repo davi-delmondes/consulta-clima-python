@@ -16,16 +16,24 @@ import requests
 from dotenv import load_dotenv
 
 
-# ==================================================
-# CONFIGURAÇÕES
-# ==================================================
+# =========================
+# Configurações gerais
+# =========================
 
+# Carrega as variáveis do arquivo .env.
 load_dotenv()
 
+# Dados principais usados na comunicação com a API.
 API_KEY = os.getenv("API_KEY")
 LINK_API = "https://api.weatherapi.com/v1/current.json"
+
+# Largura usada para centralizar títulos e montar o layout do terminal.
 LARGURA_LAYOUT = 44
 
+
+# =========================
+# Mensagens de erro da API
+# =========================
 
 # Mensagens traduzidas para os principais erros retornados pela WeatherAPI.
 MENSAGENS_ERRO = {
@@ -43,9 +51,34 @@ MENSAGENS_ERRO = {
 }
 
 
-# ==================================================
-# FUNÇÕES AUXILIARES
-# ==================================================
+# =========================
+# Campos esperados da API
+# =========================
+
+# Campos obrigatórios dentro do bloco "location".
+CAMPOS_LOCATION = ("name", "region", "country", "localtime")
+
+# Campos obrigatórios dentro do bloco "current".
+CAMPOS_CURRENT = (
+    "temp_c",
+    "feelslike_c",
+    "humidity",
+    "wind_kph",
+    "wind_dir",
+    "wind_degree",
+    "pressure_mb",
+    "uv",
+    "vis_km",
+    "last_updated",
+)
+
+# Campos obrigatórios dentro do bloco "condition".
+CAMPOS_CONDITION = ("text",)
+
+
+# =========================
+# Funções utilitárias
+# =========================
 
 def limpar_tela() -> None:
     # Limpa o terminal no Windows, Linux ou macOS.
@@ -58,6 +91,10 @@ def pausar_e_limpar() -> None:
     input("Pressione ENTER para continuar...")
     limpar_tela()
 
+
+# =========================
+# Verificação inicial
+# =========================
 
 def verificar_configuracao() -> bool:
     # Verifica se a chave da API foi carregada corretamente.
@@ -78,9 +115,9 @@ def verificar_configuracao() -> bool:
     return True
 
 
-# ==================================================
-# CONSULTA NA API
-# ==================================================
+# =========================
+# Consulta na API
+# =========================
 
 def buscar_clima(cidade: str) -> tuple[dict | None, int]:
     # Parâmetros enviados para a WeatherAPI.
@@ -94,7 +131,18 @@ def buscar_clima(cidade: str) -> tuple[dict | None, int]:
         # Faz a requisição com timeout para evitar travamentos.
         response = requests.get(LINK_API, params=params, timeout=10)
 
-        data = response.json()
+        try:
+            # Tenta converter a resposta da API para JSON.
+            data = response.json()
+
+            # Garante que a resposta seja um dicionário válido.
+            if not data or not isinstance(data, dict):
+                return (None, -1)
+
+        except ValueError:
+            # Status -1 representa uma resposta inválida dentro do programa.
+            return (None, -1)
+    
         status_code = response.status_code
 
         return (data, status_code)
@@ -103,6 +151,10 @@ def buscar_clima(cidade: str) -> tuple[dict | None, int]:
         # Status 0 representa erro de conexão dentro do programa.
         return (None, 0)
 
+
+# =========================
+# Fluxo da consulta
+# =========================
 
 def consultar_clima() -> None:
     limpar_tela()
@@ -115,13 +167,22 @@ def consultar_clima() -> None:
         pausar_e_limpar()
         return
 
+    # Busca os dados da cidade e recebe também o código de status.
     dados, status_code = buscar_clima(cidade)
 
     if status_code == 200:
-        mostrar_clima(dados)
+        # Exibe o clima somente se os dados necessários estiverem completos.
+        if validar_dados_clima(dados):
+            mostrar_clima(dados)
+
+        else:
+            print("\n[ERRO] A API retornou dados incompletos.")
+
+    elif status_code == -1:
+        print("\n[ERRO] A API retornou uma resposta inválida.")
 
     elif status_code == 0:
-        print("\nErro ao conectar com a API.")
+        print("\n[ERRO] Não foi possível conectar à API.")
 
     else:
         mostrar_erro_api(dados)
@@ -129,9 +190,62 @@ def consultar_clima() -> None:
     pausar_e_limpar()
 
 
-# ==================================================
-# EXIBIÇÃO DOS DADOS
-# ==================================================
+# =========================
+# Validação dos dados
+# =========================
+
+def validar_dados_clima(dados: dict | None) -> bool:
+    # Garante que os dados existem e estão no formato esperado.
+    if not dados:
+        return False
+
+    if not isinstance(dados, dict):
+        return False
+
+    # Confere se os blocos principais existem na resposta da API.
+    if "location" not in dados or "current" not in dados:
+        return False
+    
+    location = dados["location"]
+
+    if not isinstance(location, dict):
+        return False
+
+    current = dados["current"]
+
+    if not isinstance(current, dict):
+        return False
+
+    # Confere se o bloco de condição climática existe dentro de "current".
+    if "condition" not in current:
+        return False
+
+    condition = current["condition"]
+
+    if not isinstance(condition, dict):
+        return False
+
+    # Valida os campos usados na exibição da localização.
+    for campo in CAMPOS_LOCATION:
+        if campo not in location:
+            return False
+
+    # Valida os campos usados na exibição do clima atual.
+    for campo in CAMPOS_CURRENT:
+        if campo not in current:
+            return False
+
+    # Valida os campos usados na exibição da condição climática.
+    for campo in CAMPOS_CONDITION:
+        if campo not in condition:
+            return False
+
+    return True
+
+
+# =========================
+# Exibição dos dados
+# =========================
 
 def mostrar_secao(titulo: str) -> None:
     # Exibe um título centralizado para separar as informações.
@@ -148,18 +262,21 @@ def mostrar_campo(nome: str, valor) -> None:
 
 
 def mostrar_clima(data: dict) -> None:
+    # Exibe informações de localização.
     mostrar_secao("LOCALIZAÇÃO")
     mostrar_campo("Cidade", data['location']['name'])
     mostrar_campo("Região", data['location']['region'])
     mostrar_campo("País", data['location']['country'])
     mostrar_campo("Horário local", data['location']['localtime'])
 
+    # Exibe informações principais do clima.
     mostrar_secao("CLIMA ATUAL")
     mostrar_campo("Condição", data['current']['condition']['text'])
     mostrar_campo("Temperatura", f"{data['current']['temp_c']}°C")
     mostrar_campo("Sensação térmica", f"{data['current']['feelslike_c']}°C")
     mostrar_campo("Umidade", f"{data['current']['humidity']}%")
 
+    # Exibe informações de vento e ambiente.
     mostrar_secao("VENTO E AMBIENTE")
     mostrar_campo("Vento", f"{data['current']['wind_kph']} km/h")
     mostrar_campo("Direção do vento", data['current']['wind_dir'])
@@ -168,24 +285,46 @@ def mostrar_clima(data: dict) -> None:
     mostrar_campo("Índice UV", data['current']['uv'])
     mostrar_campo("Visibilidade", f"{data['current']['vis_km']} km")
 
+    # Exibe a data e hora da última atualização enviada pela API.
     mostrar_secao("DADOS ATUALIZADOS")
     mostrar_campo("Última atualização", data['current']['last_updated'])
 
 
-def mostrar_erro_api(dados: dict) -> None:
-    error_code = dados['error']['code']
+# =========================
+# Exibição de erros da API
+# =========================
+
+def mostrar_erro_api(dados: dict | None) -> None:
+    # Garante que a resposta possui um bloco de erro válido.
+    if not dados or "error" not in dados:
+        print("\n[ERRO] A API retornou um erro inesperado.")
+        return
+
+    erro = dados["error"]
+
+    if not isinstance(erro, dict):
+        print("\n[ERRO] A API retornou um erro inesperado.")
+        return         
+
+    error_code = erro.get("code")
+    mensagem_original = erro.get("message", "Erro desconhecido retornado pela API.")
+
+    if not error_code:
+        print(f"\n[ERRO] {mensagem_original}")
+        return
 
     # Usa uma mensagem traduzida, ou a mensagem original da API se o código não estiver mapeado.
-    mensagem = MENSAGENS_ERRO.get(error_code, dados['error']['message'])
+    mensagem = MENSAGENS_ERRO.get(error_code, mensagem_original)
 
     print(f"\nErro {error_code}: {mensagem}")
 
 
-# ==================================================
-# MENU PRINCIPAL
-# ==================================================
+# =========================
+# Menu principal
+# =========================
 
 def mostrar_menu() -> None:
+    # Exibe o menu principal do programa.
     print("╔" + "═" * LARGURA_LAYOUT + "╗")
     print("║" + "CONSULTA DE CLIMA".center(LARGURA_LAYOUT) + "║")
     print("║" + "WeatherAPI - Dados em tempo real".center(LARGURA_LAYOUT) + "║")
@@ -195,7 +334,12 @@ def mostrar_menu() -> None:
     print("╚" + "═" * LARGURA_LAYOUT + "╝")
 
 
+# =========================
+# Função principal
+# =========================
+
 def main() -> None:
+    # Encerra o programa se a configuração inicial estiver incompleta.
     if not verificar_configuracao():
         return
 
